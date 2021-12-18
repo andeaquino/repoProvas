@@ -1,32 +1,75 @@
 import styled from "styled-components";
 import { useForm } from "react-hook-form";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Loader from "react-loader-spinner";
 import { useNavigate } from "react-router-dom";
+import { getTestParams, postTest } from "../../services/API";
 
 export default function Form() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm();
-  const [loading, setLoading] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [professors, setProfessors] = useState([]);
+  const [subjProfessors, setSubjProfessors] = useState([]);
+  const [subjects, setSubjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const watchSubject = watch("subject", "1");
   const navigate = useNavigate();
 
   const onSubmit = (data) => {
-    const { category, link, name, professor, subject } = data;
+    const { category, pdf, name, professor, subject } = data;
     console.log(data);
-    if (professor === "Escolha uma disciplina") return;
-    //navigate("/");
+    if (professor === "Escolha uma disciplina") {
+      alert("Escolha um professor");
+      return;
+    }
 
-    //setLoading(true);
+    const body = {
+      name,
+      category_id: Number(category),
+      professor_id: Number(professor),
+      subject_id: Number(subject),
+      pdf,
+    };
+
+    postTest({ body })
+      .then((res) => {
+        navigate("/");
+      })
+      .catch((e) => {
+        if (e.response.status === 409) {
+          alert("Nome da prova já existe");
+        }
+      });
   };
 
-  const categories = [1, 2, 4];
-  const subjects = ["oi"];
-  const professors = [];
+  const loadTestParams = () => {
+    getTestParams().then((res) => {
+      setCategories(res.data.categories);
+      setSubjects(res.data.subjects);
+      setProfessors(res.data.professors);
+      setLoading(false);
+    });
+  };
 
-  return (
+  useEffect(loadTestParams, []);
+
+  useEffect(() => {
+    const newProf = professors.filter(
+      (prof) => prof.subjectId === Number(watchSubject)
+    );
+    setSubjProfessors(newProf);
+  }, [watchSubject, professors]);
+
+  return loading ? (
+    <Loading>
+      <Loader type="ThreeDots" color="#FFFFFF" height={26} width={102} />
+    </Loading>
+  ) : (
     <FormContainer>
       <h1>Contribua com uma prova</h1>
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -38,45 +81,47 @@ export default function Form() {
         {errors?.name && <p>{errors.name?.message}</p>}
         <label for="category">Categoria:</label>
         <select {...register("category")}>
-          {categories.map((value) => (
-            <option key={value} value={value}>
-              {value}
+          {categories.map((category) => (
+            <option key={category.id} value={category.id}>
+              {category.name}
             </option>
           ))}
         </select>
         <label for="subject">Disciplina:</label>
         <select {...register("subject")}>
-          {subjects.map((value) => (
-            <option key={value} value={value}>
-              {value}
+          {subjects.map((subject) => (
+            <option key={subject.id} value={subject.id}>
+              {subject.name}
             </option>
           ))}
         </select>
         <label for="professor">Professor:</label>
         <select {...register("professor")}>
-          {professors.length > 0 ? (
-            professors.map((value) => (
-              <option key={value} value={value}>
-                {value}
+          {subjProfessors.length === 0 ? (
+            <option key={null} value={null}>
+              Escolha uma disciplina
+            </option>
+          ) : (
+            subjProfessors.map((professor) => (
+              <option key={professor.id} value={professor.id}>
+                {professor.name}
               </option>
             ))
-          ) : (
-            <option value={null}>Escolha uma disciplina</option>
           )}
         </select>
         <input
           type="text"
           placeholder="PDF(link)"
-          {...register("link", { required: "Campo não pode estar vazio" })}
+          {...register("pdf", {
+            required: "Campo não pode estar vazio",
+            pattern: {
+              value: /.+\.pdf$/,
+              message: "Link deve terminar com .pdf",
+            },
+          })}
         />
-        {errors?.link && <p>{errors.link?.message}</p>}
-        <button type="submit">
-          {loading ? (
-            <Loader type="ThreeDots" color="#FFFFFF" height={13} width={51} />
-          ) : (
-            "Enviar Prova"
-          )}
-        </button>
+        {errors?.pdf && <p>{errors.pdf?.message}</p>}
+        <button type="submit">Enviar Prova</button>
       </form>
     </FormContainer>
   );
@@ -85,7 +130,6 @@ export default function Form() {
 const FormContainer = styled.div`
   width: 100vw;
   height: 100vh;
-  background-color: #142e54;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -153,4 +197,11 @@ const FormContainer = styled.div`
       margin-bottom: 12px;
     }
   }
+`;
+
+const Loading = styled.div`
+  height: 100vh;
+  width: 100vw;
+  text-align: center;
+  line-height: 100vh;
 `;

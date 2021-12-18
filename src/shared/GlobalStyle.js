@@ -29,7 +29,7 @@ const GlobalStyle = createGlobalStyle`
     }
     body {
         line-height: 1;
-        background-color: #6d7ce4;
+        background-color: #142e54;
     }
     * {
         box-sizing: border-box;
