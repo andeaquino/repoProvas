@@ -18,7 +18,6 @@ export default function HomeModal({ homeModal, setHomeModal }) {
     },
   };
 
-  console.log(homeModal);
   return (
     <Modal isOpen={homeModal} style={customStyles}>
       <Container>

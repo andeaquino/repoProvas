@@ -2,8 +2,9 @@ import styled from "styled-components";
 import { useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
 import Loader from "react-loader-spinner";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { getTestParams, postTest } from "../../services/API";
+import { IoChevronBackOutline } from "react-icons/io5";
 
 export default function Form() {
   const {
@@ -22,7 +23,7 @@ export default function Form() {
 
   const onSubmit = (data) => {
     const { category, pdf, name, professor, subject } = data;
-    console.log(data);
+
     if (professor === "Escolha uma disciplina") {
       alert("Escolha um professor");
       return;
@@ -123,6 +124,9 @@ export default function Form() {
         {errors?.pdf && <p>{errors.pdf?.message}</p>}
         <button type="submit">Enviar Prova</button>
       </form>
+      <Link to="/">
+        <IoChevronBackOutline className="icon" />
+      </Link>
     </FormContainer>
   );
 }
@@ -142,6 +146,15 @@ const FormContainer = styled.div`
     margin-bottom: 80px;
     margin-top: -280px;
     text-align: center;
+  }
+
+  .icon {
+    color: #ffffff;
+    font-size: 26px;
+    cursor: pointer;
+    position: fixed;
+    top: 50px;
+    right: 50px;
   }
 
   form {
