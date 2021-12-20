@@ -33,7 +33,9 @@ export default function Tests() {
       });
   };
 
-  useEffect(type === "professor" ? loadProfessors : loadSubjects, []);
+  useEffect(() => {
+    type === "professor" ? loadProfessors() : loadSubjects();
+  }, [type]);
 
   return (
     <TestsContainer>
